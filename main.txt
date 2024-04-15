@@ -1,0 +1,36 @@
+function Calculator() {
+    this.calculate = function(num1, operator, num2) {
+        var result;
+        num1 = parseFloat(num1);
+        num2 = parseFloat(num2);
+
+        switch(operator) {
+            case '+':
+                result = num1 + num2;
+                break;
+            case '-':
+                result = num1 - num2;
+                break;
+            case '*':
+                result = num1 * num2;
+                break;
+            case '/':
+                if(num2 != 0) {
+                    result = num1 / num2;
+                } else {
+                    console.log("No se puede dividir por cero");
+                }
+                break;
+            default:
+                console.log("Operador no válido");
+        }
+
+        return result;
+    }
+}
+
+var calculator = new Calculator();
+console.log(calculator.calculate(5, '+', 3));  // Imprime 8
+console.log(calculator.calculate(5, '-', 3));  // Imprime 2
+console.log(calculator.calculate(5, '*', 3));  // Imprime 15
+console.log(calculator.calculate(5, '/', 3));  // Imprime 1.6666666666666667

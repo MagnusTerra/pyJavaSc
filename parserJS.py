@@ -5,7 +5,6 @@ from lex import tokens
 import AST
 from copy import deepcopy
 
-################################################### SCOPE ############################################################
 listScope = []
 
 class Scope():
@@ -35,9 +34,7 @@ listFunctions = []
 error = False
 
 start = '''program'''
-####################################################################################################################
 
-############################################ PROGRAMS ############################################################
 def p_newline_program(p):
     ''' program : NEWLINE program'''
     p[0] = p[2]
@@ -70,9 +67,7 @@ def p_program_statement(p):
     '''programStatement : statement'''
     p[0] = AST.ProgramNode([p[1]])
 
-####################################################################################################################
 
-##################################################### STATEMENT ####################################################
 def p_newline_statement(p):
     '''statement : NEWLINE statement'''
     p[0] = p[2]
@@ -90,10 +85,7 @@ def p_statement(p):
     | returnStatement
     | varList'''
     p[0] = p[1]
-####################################################################################################################
 
-############################################### STRUCTURE ##########################################################
-#IF
 def p_if(p):
     '''structureIf : IF '(' condition ')' programStatement NEWLINE
     | IF '(' condition ')' programBlock '''
@@ -109,17 +101,15 @@ def p_if_else(p):
     p[0] = AST.IfNode(p[1].children+[p[2]])
 
 def p_ternary_operator(p):
-    '''structureTernary : condition '?' returnValues ':' returnValues ''' #see returnValues in functions -> expression or arrayDeclaration or functionCall
+    '''structureTernary : condition '?' returnValues ':' returnValues ''' 
     p[0] = AST.IfNode([p[1],AST.ProgramNode(p[3]),AST.ElseNode(AST.ProgramNode(p[5]))])
 
-#FOR
 def p_for(p):
     '''structure : FOR new_scope '(' assignation ';' condition ';' assignation ')' programBlock 
     | FOR new_scope '(' assignation ';' condition ';' assignation ')' programStatement '''
     p[0]=AST.ForNode([AST.StartForNode(p[4]),p[6],AST.IncForNode(p[8]),p[10]])
     popscope()
 
-#WHILE
 def p_while(p):
     ''' structure : WHILE '(' condition ')' programStatement 
     | WHILE '(' condition ')' programBlock'''
@@ -132,8 +122,6 @@ def p_do_while(p):
 def p_do_while_without_bracket(p):
     '''structure : DO programStatement NEWLINE WHILE '(' condition ')'  '''
     p[0] = p[0] = AST.DoNode([p[2],AST.WhileNode([p[6],p[2]])])
-
-#SWITCH
 
 def p_case_pro(p):
     '''structure : SWITCH '(' IDENTIFIER ')' '{' new_scope caseList '}' '''
@@ -179,9 +167,6 @@ def p_case_list_recursive(p):
     '''caseList : caseList caseStructure '''
     p[0] = p[1]+[p[2]]
 
-####################################################################################################################
-
-############################################## CONDITION ###########################################################
 def p_conditionSymbol(p):
     '''conditionSymbol : LT
     | GT
@@ -214,9 +199,6 @@ def p_condtition_paren(p):
     '''condition : '(' condition ')' '''
     p[0]=p[2]
 
-####################################################################################################################
-
-########################################### WORD STATEMENT #########################################################
 def p_break(p):
     ''' breakStatement : BREAK '''
     p[0] = AST.BreakNode()
@@ -229,9 +211,6 @@ def p_log(p):
     ''' logStatement : LOG '(' returnValues ')' '''
     p[0] = AST.LogNode(p[3])
 
-####################################################################################################################
-
-################################################## VARIABLES #######################################################
 def p_var_creation(p):
     '''varCreation : VAR IDENTIFIER
     | LET IDENTIFIER'''
@@ -255,7 +234,6 @@ def p_var_creation_list_recursive(p):
         error = True
         print(f"ERROR : {p[3]} is already declared")
 
-#ARRAY
 def p_array_empty(p):
     '''arrayDeclaration : '[' ']' '''
     p[0] = AST.ArrayNode(AST.TokenNode('Empty Array'))
@@ -264,7 +242,7 @@ def p_array_declaration(p):
     '''arrayDeclaration : '[' tokenList ']' '''
     p[0] = AST.ArrayNode(p[2])
 
-def p_token_list(p): #return a list of TokenNode
+def p_token_list(p): 
     '''tokenList : IDENTIFIER
     | NUMBER '''
     p[0] = [AST.TokenNode(p[1])]
@@ -295,10 +273,6 @@ def p_array_access(p):
         error = True
         print(f"ERROR : {p[1]} is not declared")
 
-####################################################################################################################
-
-############################################## EXPRESSIONS #########################################################
-
 def p_expression_num(p):
     '''expression : NUMBER '''
     p[0] = AST.TokenNode(p[1])
@@ -323,10 +297,6 @@ def p_expression_op(p):
 def p_minus(p):
     ''' expression : ADD_OP expression %prec UMINUS'''
     p[0] = AST.OpNode(p[1], [p[2]])
-
-####################################################################################################################
-
-################################################### ASSIGNATION ####################################################
 
 def p_expression_op_assignation(p):
     '''assignation : IDENTIFIER ADD_OP '=' expression
@@ -364,9 +334,6 @@ def p_creation_assignation(p):
     | varList '=' structureTernary'''
     p[0] = AST.AssignNode(p[1].children+[p[3]],True)
 
-####################################################################################################################
-
-############################################## FUNCTIONS ###########################################################
 def p_function_creation(p):
     '''functionDeclaration : FUNCTION IDENTIFIER '(' new_scope argList ')' programBlock'''
     if p[2] not in listScope[-1 if len(listScope)>1 else 0].functionVars:
@@ -388,7 +355,7 @@ def p_function_creation_without_arg(p):
     
 def p_arglist(p):
     '''argList : IDENTIFIER'''
-    if p[1] not in listScope[-1 if len(listScope)>1 else 0].vars: #if the var exist already, it will be erased by local variables : https://www.w3schools.com/js/js_scope.asp
+    if p[1] not in listScope[-1 if len(listScope)>1 else 0].vars: 
         listScope[-1 if len(listScope)>1 else 0].vars.append(p[1])
     listScope[-1 if len(listScope)>1 else 0].argVars.append(p[1])
     p[0] = AST.ArgNode([AST.TokenNode(p[1])])
@@ -453,9 +420,7 @@ def p_return_values(p):
     | arrayDeclaration
     | functionCall'''
     p[0] = p[1]
-####################################################################################################################
-
-#http://www.dabeaz.com/ply/ply.html#ply_nn27
+    
 precedence = (
     ('left','NEWLINE','ELSE','OR','IDENTIFIER',',',';'),
     ('nonassoc','LT','GT','EQUALV','EQUALVT','NOTEQUALV','NOTEQUALVT', 'LTE','GTE'),

@@ -1,12 +1,5 @@
-# coding: UTF-8
-
-''' Petit module utilitaire pour la construction, la manipulation et la 
-représentation d'arbres syntaxiques abstraits.
-Sûrement plein de bugs et autres surprises. à prendre comme un 
-"work in progress"...
-Notamment, l'utilisation de pydot pour représenter un arbre syntaxique cousu
-est une utilisation un peu "limite" de graphviz. ça marche, mais le layout n'est
-pas toujours optimal...
+''' módulo de utilidad para construir, manipular y
+representación de árboles sintácticos abstractos.
 '''
 dicNode = {}
 
@@ -60,8 +53,6 @@ class Node:
                 if label:
                     edge.set_label(str(i))
                 dot.add_edge(edge)
-                #Workaround for a bug in pydot 1.0.2 on Windows:
-                #dot.set_graphviz_executables({'dot': r'C:\Program Files\Graphviz2.38\bin\dot.exe'})
             return dot
         
     def threadTree(self, graph, seen = None, col=0):
@@ -78,18 +69,12 @@ class Node:
             for i,c in enumerate(self.next):
                 if not c: return
                 col = (col + 1) % len(colors)
-                col=0 # FRT pour tout afficher en rouge
+                col=0 
                 color = colors[col]                
                 c.threadTree(graph, seen, col)
                 edge = pydot.Edge(self.ID,c.ID)
                 edge.set_color(color)
                 edge.set_arrowsize('.5')
-                # Les arrêtes correspondant aux coutures ne sont pas prises en compte
-                # pour le layout du graphe. Ceci permet de garder l'arbre dans sa représentation
-                # "standard", mais peut provoquer des surprises pour le trajet parfois un peu
-                # tarabiscoté des coutures...
-                # En commantant cette ligne, le layout sera bien meilleur, mais l'arbre nettement
-                # moins reconnaissable.
                 edge.set_constraint('false') 
                 if label:
                     edge.set_taillabel(str(i))
@@ -124,7 +109,6 @@ class EntryNode(Node):
     def __init__(self):
         Node.__init__(self, None)
 
-####################################################################################################################
 
 class FunctionNode(Node):
     type = 'Function'
@@ -142,7 +126,6 @@ class FunctionCallNode(Node):
 class ArgNode(Node):
     type = 'Argument(s)'
 
-####################################################################################################################
 
 class OpNode(Node):
     def __init__(self, op, children):
@@ -168,7 +151,6 @@ class VariableNode(Node):
 class ArrayNode(Node):
     type = 'Array'
 
-####################################################################################################################
 
 class IfNode(Node):
     type = 'If'
@@ -202,7 +184,6 @@ class CaseNode(Node):
 class DefaultNode(Node):
     type = 'Default'
 
-####################################################################################################################
 
 class LogNode(Node):
     type = 'Log'
@@ -213,7 +194,6 @@ class BreakNode(Node):
 class ContinueNode(Node):
     type = 'Continue'
 
-####################################################################################################################
 
 class ConditionNode(Node):
     type = 'Condition'
@@ -227,7 +207,6 @@ class OrNode(Node):
 class NotNode(Node):
     type = 'NOT (!)'
 
-####################################################################################################################
     
 def addToClass(cls):
     def decorator(func):
@@ -236,23 +215,22 @@ def addToClass(cls):
     return decorator
                     
 def recreateVariableNode():
-    """ replace all variables under one variable node per scope (per programmeNode)"""
+    """ sustituir todas las variables bajo un nodo variable por ámbito"""
     programNodeList = set([dicNode[key] for key in dicNode if dicNode[key].type == 'Program'])
     variableNodeList = set([dicNode[key] for key in dicNode if dicNode[key].type == 'Variable(s)'])
     assignCreationNodeList = set([dicNode[key] for key in dicNode if dicNode[key].type == '=' and dicNode[key].isCreated])
 
     for programNode in programNodeList:
-        # var nodes
+
         for variableNode in set([variableNode for variableNode in variableNodeList if variableNode in programNode.children]):
             programNode.addVariables(list(set(variableNode.children)))
             programNode.children.remove(variableNode)
 
-        # assign nodes with creation of variables
         for assignNode in set([assignNode for assignNode in assignCreationNodeList if assignNode in programNode.children]):
             programNode.addVariables(list(set(assignNode.children[:len(assignNode.children)-1])))
 
 def getArrayNodeById(id):
-    """ return the ArrayNode corresponding to the given id"""
+    """ devuelve el ArrayNode correspondiente al id dado"""
     arrayNodes = set([dicNode[key] for key in dicNode if dicNode[key].type == 'Array'])
     assignNodes = set([dicNode[key] for key in dicNode if dicNode[key].type == '='])
     for node in [node for node in assignNodes if len(set(node.children).intersection(arrayNodes))]:
@@ -260,7 +238,7 @@ def getArrayNodeById(id):
             return node
 
 def getFunction(id):
-    """ return a functioncallNode containing the function Node from the given id"""
+    """ devuelve un functioncallNode que contiene la función Nodo del id dado"""
     from functools import reduce
     functionNodes = [dicNode[key] for key in dicNode if dicNode[key].type == 'Function' and dicNode[key].children[0].tok==id]
     if functionNodes:
@@ -269,7 +247,7 @@ def getFunction(id):
 
 
 def verifyReturnNode():
-    """ verify if all return nodes are in programmes block from function nodes"""
+    """ comprobar si todos los nodos de retorno se encuentran en bloques de programas a partir de nodos de función"""
     returnNodes = set([dicNode[key] for key in dicNode if dicNode[key].type == 'Return'])
     if returnNodes == None : return True
     functionNodes = set([dicNode[key] for key in dicNode if dicNode[key].type == 'Function'])
@@ -284,23 +262,23 @@ def verifyReturnNode():
     return True
 
 def verifyBreakContinueNode():
-    """ verify if all continue nodes are in loops and all break nodes are in structures"""
+    """ verificar si todos los nodos continue están en bucles y todos los nodos break están en estructuras"""
     continueNodes = []
     breakNodes = []
     switchNodes = []
     loopNodesToCheck = []   
 
-    for key in dicNode:                         #more efficient than 5 list comprehension, only one loop
+    for key in dicNode:                         
         if dicNode[key].type == 'Continue':
             continueNodes.append(dicNode[key])
         elif dicNode[key].type == 'Break':
             breakNodes.append(dicNode[key])
         elif dicNode[key].type == 'For':
-            loopNodesToCheck.extend(dicNode[key].children[3].children) #ProgramNode children of ForNode
+            loopNodesToCheck.extend(dicNode[key].children[3].children) 
         elif dicNode[key].type == 'Switch':
             switchNodes.append(dicNode[key])
-        elif dicNode[key].type == 'While':      # do while have the same program
-            loopNodesToCheck.extend(dicNode[key].children[1].children) #ProgramNode children of WhileNode
+        elif dicNode[key].type == 'While':      
+            loopNodesToCheck.extend(dicNode[key].children[1].children) 
 
     if continueNodes == None and breakNodes == None : return True
     
@@ -327,7 +305,7 @@ def verifyBreakContinueNode():
     return True
 
 def checkInChildren(nodeToCheck,nodeSearched):
-    """check if a given node is in the nodeToCheck or its children"""
+    """comprobar si un nodo dado se encuentra en el nodoToCheck o en sus hijos"""
     if nodeToCheck==nodeSearched:
         return True
     if nodeToCheck.children == None:
@@ -338,7 +316,7 @@ def checkInChildren(nodeToCheck,nodeSearched):
     return False
 
 def verifyDefault():
-    """verify if all switch nodes have only 0 or 1 default node in their children"""
+    """verificar si todos los nodos de conmutación tienen sólo 0 o 1 nodo por defecto en sus hijos"""
     for node in  set([dicNode[key] for key in dicNode if dicNode[key].type == 'Switch']):
         if not node.verifyDefault():
             print("ERROR : two default in the same switch")
@@ -346,5 +324,5 @@ def verifyDefault():
     return True
 
 def verifyNode():
-    """verify if return, break, continue and Default Nodes are well placed"""
+    """comprobar si los nodos return, break, continue y Default están bien situados"""
     return verifyReturnNode() and verifyBreakContinueNode() and verifyDefault()

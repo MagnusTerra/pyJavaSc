@@ -1,58 +1,5 @@
 import sys
 import parserJS
-""" SVM - Simple Virtual Machine (or Stupid Virtual Machine)
-Very simplistic virtual machine aimed to illustrate some compilers' concepts.
-It probably has no other use whatsoever.
-
-usage: svm.py <filename> 
-This reads and execute the "bytecode" file given in <filename>.
-It does so quite slowly and implements almost no error checking :-(
-
-SVM implements a very simplistic stack machine. It has a stack (containing only numbers) 
-and a "central memory" that is adressable by names instead of adresses (think "variables"...)
-
-The format of svm's "bytecode" is the following:
-    
-    each line in is the form
-    tag: opcode parameter?
-    
-    the tag is optional; parameters depend on the opcode.
-    
-    Valid opcodes are:
-        
-        PUSHC <val>: pushes the constant value <val> on the execution stack
-        PUSHV <id>: pushes the value of the identifier <id> on the execution stack
-        SET <id>: pops a value from the stack and sets <id> accordingly
-        PRINT: pops a value from the stack and prints it.
-        ADD, SUB, MUL, DIV: pops two values from the stack and pushes their 
-                    sum, difference, product, quotient respectively.
-        USUB: Changes the sign of the number on the top of the stack.
-        JMP <tag>: jumps to <tag>
-        JIZ, JINZ <tag>: if the top of the stack is (not) zero, jumps to <tag>
-        
-    Example: this would be a valid "bytecode" file to print the numbers from 0 to 9:
-                    PUSHC 0.0
-                    SET a
-                    JMP cond1
-        body1: PUSHV a
-                    PRINT
-                    PUSHV a
-                    PUSHC 1.0
-                    ADD
-                    SET a
-        cond1: PUSHV a
-                    PUSHC 10.0
-                    SUB
-                    JINZ body1        
-                    
-    NB: whitespace is not significant in bytecode files. The identation above is for readability only.
-    
-    Have fun!
-    
-    SVM v0.1 - Matthieu Amiguet/HE-Arc, 2008
-"""
-
-
 
 dicConditions = {
 	'<' 	: lambda x,y : int(x < y),

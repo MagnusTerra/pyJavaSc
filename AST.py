@@ -1,6 +1,4 @@
-''' módulo de utilidad para construir, manipular y
-representación de árboles sintácticos abstractos.
-'''
+
 dicNode = {}
 
 import pydot

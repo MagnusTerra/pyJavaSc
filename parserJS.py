@@ -463,5 +463,5 @@ if __name__ == "__main__":
         import os
         name = os.path.splitext(sys.argv[1])[0]+'-ast.pdf'
         graph.write_pdf(name)
-        print ("wrote ast to", name)
+       
         
